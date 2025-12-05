@@ -124,3 +124,64 @@ void* get_data(list_t *list, bool (*predicate)(void *data, void *user_data), voi
     }
     return NULL;
 }
+
+typedef struct grid_t {
+    size_t rows;
+    size_t cols;
+    char *data;
+} grid_t;
+
+grid_t *grid_from_string(const char *str) {
+    char *data = malloc(strlen(str) + 1);
+    int num_cols = 0;
+    int num_rows = 0;
+
+    for(int i = 0; i < strlen(str); ++i) {
+        if (str[i] == '\n') {
+            if (num_cols == 0) {
+                num_cols = i;
+            }
+            num_rows++;
+        } else {
+            data[i - num_rows] = str[i];
+        }
+    }
+
+    ++num_rows;
+
+    grid_t *grid = (grid_t *)malloc(sizeof(grid_t));
+    grid->rows = num_rows;
+    grid->cols = num_cols;
+    grid->data = data;
+    return grid;
+}
+
+char grid_get(grid_t *grid, size_t row, size_t col) {
+    if (row >= grid->rows || col >= grid->cols) {
+        return '\0';
+    }
+    return grid->data[row * grid->cols + col];
+}
+
+void grid_set(grid_t *grid, size_t row, size_t col, char value) {
+    if (row >= grid->rows || col >= grid->cols) {
+        return;
+    }
+    grid->data[row * grid->cols + col] = value;
+}
+
+void iter_adjacent(grid_t *grid, size_t row, size_t col, void (*callback)(char value, size_t r, size_t c, void *user_data), void *user_data) {
+    for (int dr = -1; dr <= 1; ++dr) {
+        for (int dc = -1; dc <= 1; ++dc) {
+            if (dr == 0 && dc == 0) {
+                continue;
+            }
+            int new_row = row + dr;
+            int new_col = col + dc;
+            if (new_row >= 0 && new_row < grid->rows && new_col >= 0 && new_col < grid->cols) {
+                char value = grid_get(grid, new_row, new_col);
+                callback(value, new_row, new_col, user_data);
+            }
+        }
+    }
+}
