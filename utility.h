@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-char *clone(char *str) {
+char *clone(const char *str) {
     if (str == NULL) {
         return NULL;
     }
@@ -87,12 +87,14 @@ typedef struct node_t {
 
 typedef struct {
     node_t *head;
+    size_t size;
 } list_t;
 
 
 list_t *new_list() {
     list_t *list = (list_t *)malloc(sizeof(list_t));
     list->head = NULL;
+    list->size = 0;
     return list;
 }
 
@@ -101,6 +103,7 @@ void insert(list_t *list, void *data) {
     new_node->data = data;
     new_node->next = list->head;
     list->head = new_node;
+    list->size++;
 }
 
 bool contains(list_t *list, bool (*predicate)(void *data, void *user_data), void *user_data) {
@@ -123,6 +126,21 @@ void* get_data(list_t *list, bool (*predicate)(void *data, void *user_data), voi
         current = current->next;
     }
     return NULL;
+}
+
+void* to_array(list_t *list, size_t item_size) {
+    if (list->size == 0) {
+        return NULL;
+    }
+    void *array = malloc(list->size * item_size);
+    node_t *current = list->head;
+    size_t index = 0;
+    while (current != NULL) {
+        memcpy((char *)array + index * item_size, current->data, item_size);
+        current = current->next;
+        index++;
+    }
+    return array;
 }
 
 typedef struct grid_t {
